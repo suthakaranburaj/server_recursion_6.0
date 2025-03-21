@@ -136,7 +136,7 @@ export async function save_user(req, res) {
                 return sendResponse(res, false, null, "Registration failed");
             }
             const [user] = await knex("user").where({ email: obj.email, status: 1 });
-            console.log(user)
+            // console.log(user)
             // Generate tokens
             const accessToken = generateAccessToken(user);
             const refreshToken = generateRefreshToken(user);

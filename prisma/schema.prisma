@@ -28,5 +28,18 @@ model user {
   status                              Boolean?                        @default(true)
   createdAt                           DateTime                        @default(now())
   updatedAt                           DateTime                        @default(now()) @updatedAt
+
+  user_statements                     user_statements[]
+}
+
+model user_statements {
+  id                                  Int                              @id @default(autoincrement())
+  name                                String?
+  url                                 String?      
+  user_id                             Int
+  user                                user                            @relation(fields: [user_id], references: [user_id])                    
+  status                              Boolean?                        @default(true)
+  createdAt                           DateTime                        @default(now())
+  updatedAt                           DateTime                        @default(now()) @updatedAt                    
 }
 
