@@ -1,4 +1,4 @@
-import { sendResponse } from "../../utils/apiResponse.js"; //
+import { sendResponse } from "../../utils/apiResponse.js";
 import { hash } from "../../helper/services/cryptoClient.js";
 import { jwtTokenEncode } from "../../helper/services/jwtServices.js";
 import logger from "../../helper/services/loggingServices.js";
@@ -59,111 +59,128 @@ export async function Login(req, res) {
 
 export async function save_user(req, res) {
     try {
-        const user_id = getIntOrNull(req.body.user_id);
-        const obj = {
-            image: getObjOrNull(req.body.image),
-            name: getObjOrNull(req.body.name),
-            email: getObjOrNull(req.body.email),
-            phone: getObjOrNull(req.body.phone),
-            username: getObjOrNull(req.body.username)
-        };
-
-        const validate = validateUserData(obj);
-        if (!validate.status)
-            return sendResponse(res, false, null, validate.message || "Validation Failed");
-
+      const user_id = getIntOrNull(req.body?.user_id);
+      const obj = {
+        name: getObjOrNull(req.body.name),
+        email: getObjOrNull(req.body.email),
+        phone: getObjOrNull(req.body.phone),
+        username: getObjOrNull(req.body.username),
+      };
+  
+      // Handle image upload
+      if (req.files && req.files.image) {
+        const avatarLocalPath = req.files.image[0].path;
+        const image = await uploadOnCloudinary(avatarLocalPath, { secure: true });
+        obj.image = image?.secure_url;
+      }
+  
+      if (user_id) {
+        // Update existing user (profile update)
+        const updateData = {};
+  
+        // Only include fields that are provided in the request
+        if (obj.name) updateData.name = obj.name;
+        if (obj.email) updateData.email = obj.email;
+        if (obj.phone) updateData.phone = obj.phone;
+        if (obj.username) updateData.username = obj.username;
+        if (obj.image) updateData.image = obj.image;
+  
+        // Update only if there are fields to update
+        if (Object.keys(updateData).length > 0) {
+          const result = await knex("user").where({ user_id }).update(updateData);
+          if (!result) {
+            return sendResponse(res, false, null, "User not found");
+          }
+          return sendResponse(res, true, null, "User Updated");
+        } else {
+          return sendResponse(res, false, null, "No data provided for update");
+        }
+      } else {
+        // Create new user (registration)
+        if (!req.body.password) {
+          return sendResponse(res, false, null, "Please provide password");
+        }
+  
+        // Validate required fields for registration
+        if (!obj.name || !obj.email || !obj.phone || !obj.username) {
+          return sendResponse(res, false, null, "All fields are required for registration");
+        }
+  
         // Check for existing email, phone, username
         const checkemailExists = await checkExists(
-            "user",
-            "user_id",
-            user_id,
-            "email",
-            obj.email,
-            "The Email"
+          "user",
+          "user_id",
+          null,
+          "email",
+          obj.email,
+          "The Email"
         );
-        if (checkemailExists.exists)
-            return sendResponse(res, false, null, checkemailExists.message);
-
+        if (checkemailExists.exists) {
+          return sendResponse(res, false, null, checkemailExists.message);
+        }
+  
         const checkphoneExists = await checkExists(
-            "user",
-            "user_id",
-            user_id,
-            "phone",
-            obj.phone,
-            "The Phone Number"
+          "user",
+          "user_id",
+          null,
+          "phone",
+          obj.phone,
+          "The Phone Number"
         );
-        if (checkphoneExists.exists)
-            return sendResponse(res, false, null, checkphoneExists.message);
-
+        if (checkphoneExists.exists) {
+          return sendResponse(res, false, null, checkphoneExists.message);
+        }
+  
         const checkNameExists = await checkExists(
-            "user",
-            "user_id",
-            user_id,
-            "username",
-            obj.username,
-            "The Username"
+          "user",
+          "user_id",
+          null,
+          "username",
+          obj.username,
+          "The Username"
         );
-        if (checkNameExists.exists) return sendResponse(res, false, null, checkNameExists.message);
-
-        const passwordStr = req.body.password;
-
-        // Handle image upload
-        if (req.files && Array.isArray(req.files.image) && req.files.image.length > 0) {
-            const avatarLocalPath = req.files.image[0].path;
-            const image = await uploadOnCloudinary(avatarLocalPath, { secure: true });
-            obj.image = image?.secure_url;
+        if (checkNameExists.exists) {
+          return sendResponse(res, false, null, checkNameExists.message);
         }
-
-        if (user_id) {
-            // Update existing user
-            const result = await knex("user").where({ user_id }).update(obj);
-            if (!result) {
-                return sendResponse(res, false, null, "User not found");
-            }
-            return sendResponse(res, true, null, "User Updated");
-        } else {
-            // Create new user
-            if (!passwordStr) {
-                return sendResponse(res, false, null, "Please provide password");
-            }
-            obj.password = passwordStr;
-            obj.status = 1; // Ensure status is set to active
-
-            // Insert new user and return the created user data
-            const newUser = await knex("user").insert(obj);
-
-            if (!newUser) {
-                return sendResponse(res, false, null, "Registration failed");
-            }
-            const [user] = await knex("user").where({ email: obj.email, status: 1 });
-            console.log(user)
-            // Generate tokens
-            const accessToken = generateAccessToken(user);
-            const refreshToken = generateRefreshToken(user);
-
-            // Save refresh token in the database
-            await knex("user")
-                .where({ user_id: user.user_id })
-                .update({ refresh_token: refreshToken });
-
-            // Set cookies
-            const options = {
-                httpOnly: false,
-                secure: true,
-                sameSite: "Strict"
-            };
-
-            return res
-                .status(200)
-                .cookie("accessToken", accessToken, options)
-                .cookie("refreshToken", refreshToken, options)
-                .json({ success: true, accessToken ,message:"Registered Successfully"});
+  
+        // Add password and status to the object
+        obj.password = req.body.password;
+        obj.status = 1; // Ensure status is set to active
+  
+        // Insert new user and return the created user data
+        const [newUser] = await knex("user").insert(obj).returning("*");
+  
+        if (!newUser) {
+          return sendResponse(res, false, null, "Registration failed");
         }
+  
+        // Generate tokens
+        const accessToken = generateAccessToken(newUser);
+        const refreshToken = generateRefreshToken(newUser);
+  
+        // Save refresh token in the database
+        await knex("user")
+          .where({ user_id: newUser.user_id })
+          .update({ refresh_token: refreshToken });
+  
+        // Set cookies
+        const options = {
+          httpOnly: false,
+          secure: true,
+          sameSite: "Strict",
+        };
+  
+        return res
+          .status(200)
+          .cookie("accessToken", accessToken, options)
+          .cookie("refreshToken", refreshToken, options)
+          .json({ success: true, accessToken, message: "Registered Successfully" });
+      }
     } catch (error) {
-        logger.consoleErrorLog(req.originalUrl, "Error in saveUser", error);
-        return sendResponse(res, false, null, "Error saving user details", statusType.DB_ERROR);
+      logger.consoleErrorLog(req.originalUrl, "Error in saveUser", error);
+      return sendResponse(res, false, null, "Error saving user details", statusType.DB_ERROR);
     }
-}
+  }
 
 export const get_current_user = asyncHandler(async (req, res) => {
     const user = req.userInfo;
