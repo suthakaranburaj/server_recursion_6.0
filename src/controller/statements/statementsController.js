@@ -31,7 +31,7 @@ export const uploadStatements = asyncHandler(async (req, res) => {
     let json_data;
     const [result] = await knex("user_statements").insert(data).returning("id");
     try {
-        json_data = await axios.post("http://127.0.0.1:5000//upload_url", payload);
+        json_data = await axios.post("http://localhost:5000/upload_url", payload);
         console.log("Data successfully sent to conversion API:", json_data.status);
     } catch (error) {
         console.error("Error sending data to conversion API:", error.message);
