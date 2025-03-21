@@ -52,3 +52,21 @@ export const validateEmail = (email) => {
     }
     return false;
 };
+
+export const createNotification = async (message, type, userId, status = true) => {
+    try {
+        const [notification] = await knex("notification")
+            .insert({
+                message,
+                type,
+                user_id: userId,
+                status,
+                is_read: false
+            })
+            .returning("*");
+        return notification;
+    } catch (error) {
+        console.log("Error creating notification:", error);
+        throw error;
+    }
+};

@@ -25,12 +25,16 @@ model user {
   age                                 Int?
   refresh_token                       String?                         @db.Text
   token_version                       Int                             @default(0)
+  subscription                        Boolean?                        @default(false)
+  alert_limit                         Int?                            
   status                              Boolean?                        @default(true)
   createdAt                           DateTime                        @default(now())
   updatedAt                           DateTime                        @default(now()) @updatedAt
 
   user_statements                     user_statements[]
   user_transactions                   user_transactions[]
+  alert                               alert[]
+  notification                        notification[]
 }
 
 model user_statements {
@@ -63,3 +67,24 @@ model user_transactions {
   updatedAt                           DateTime                        @default(now()) @updatedAt                              
 }
 
+model alert {
+  id                                  Int                             @id @default(autoincrement())
+  message                             String?
+  user_id                             Int
+  user                                user                            @relation(fields: [user_id], references: [user_id])                  
+  status                              Boolean?                        @default(true)
+  createdAt                           DateTime                        @default(now())
+  updatedAt                           DateTime                        @default(now()) @updatedAt  
+}
+
+model notification {
+  id                                  Int                             @id @default(autoincrement())
+  message                             String?
+  type                                String?                         // e.g., 'ALERT', 'TRANSACTION', 'SYSTEM'
+  is_read                             Boolean?                        @default(false)
+  user_id                             Int
+  user                                user                            @relation(fields: [user_id], references: [user_id])
+  status                              Boolean?                        @default(true)
+  createdAt                           DateTime                        @default(now())
+  updatedAt                           DateTime                        @default(now()) @updatedAt
+}
