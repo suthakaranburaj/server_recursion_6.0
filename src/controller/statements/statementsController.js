@@ -75,8 +75,10 @@ export const uploadStatements = asyncHandler(async (req, res) => {
 
         // Second pass: Update Category based on frequency
         json_data.data.forEach((transaction) => {
-            transaction.Category =
-                frequencyMap[transaction.Narration] >= 10 ? transaction.Narration : "Other";
+            if (transaction.Category === "Other") {
+                transaction.Category =
+                    frequencyMap[transaction.Narration] >= 10 ? transaction.Narration : "Other";
+            }
         });
 
         // Convert to camelCase keys
@@ -94,7 +96,7 @@ export const uploadStatements = asyncHandler(async (req, res) => {
 
         json_data.data = normalizedData;
         // console.log(normalizedData)
-        // await knex("user_transactions").insert(normalizedData);
+        await knex("user_transactions").insert(normalizedData);
         await createNotification("Statements uploaded successfully!", "Statement", user.user_id);
     }
     if (!result) {
@@ -254,7 +256,7 @@ export const getDashBoardStats = asyncHandler(async (req, res) => {
 export const getAllTransaction = asyncHandler(async (req, res) => {
     const user = req.userInfo;
 
-    const { user_statement_id } = req.query;
+    const { user_statement_id } = req.params;
     // const  user_statement_id = 30;
 
     const data = await knex("user_transactions")

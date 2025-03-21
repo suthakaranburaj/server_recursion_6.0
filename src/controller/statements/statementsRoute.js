@@ -7,7 +7,7 @@ const router = Router();
 router.route("/save").post(upload.single("statements"), Statement.uploadStatements);
 
 router.route("/getAll").get(Statement.getStatements);
-router.route("/get_all_transactions").get(Statement.getAllTransaction);
+router.route("/get_all_transactions/:user_statement_id").get(Statement.getAllTransaction);
 router.route("/stats").get(Statement.getDashBoardStats);
 
 //verifyJWT
