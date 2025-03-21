@@ -50,7 +50,7 @@ export async function Login(req, res) {
             .status(200)
             .cookie("accessToken", accessToken, options)
             .cookie("refreshToken", refreshToken, options)
-            .json({ success: true, accessToken,status:true });
+            .json({ success: true, accessToken, status: true });
     } catch (error) {
         logger.error(error);
         return sendResponse(res, false, null, "Login failed");
@@ -59,133 +59,138 @@ export async function Login(req, res) {
 
 export async function save_user(req, res) {
     try {
-      const user_id = getIntOrNull(req.body?.user_id);
-      const obj = {
-        name: getObjOrNull(req.body.name),
-        email: getObjOrNull(req.body.email),
-        phone: getObjOrNull(req.body.phone),
-        username: getObjOrNull(req.body.username),
-      };
-  
-      // Handle image upload
-      if (req.files && req.files.image) {
-        const avatarLocalPath = req.files.image[0].path;
-        const image = await uploadOnCloudinary(avatarLocalPath, { secure: true });
-        obj.image = image?.secure_url;
-      }
-  
-      if (user_id) {
-        // Update existing user (profile update)
-        const updateData = {};
-  
-        // Only include fields that are provided in the request
-        if (obj.name) updateData.name = obj.name;
-        if (obj.email) updateData.email = obj.email;
-        if (obj.phone) updateData.phone = obj.phone;
-        if (obj.username) updateData.username = obj.username;
-        if (obj.image) updateData.image = obj.image;
-  
-        // Update only if there are fields to update
-        if (Object.keys(updateData).length > 0) {
-          const result = await knex("user").where({ user_id }).update(updateData);
-          if (!result) {
-            return sendResponse(res, false, null, "User not found");
-          }
-          return sendResponse(res, true, null, "User Updated");
-        } else {
-          return sendResponse(res, false, null, "No data provided for update");
-        }
-      } else {
-        // Create new user (registration)
-        if (!req.body.password) {
-          return sendResponse(res, false, null, "Please provide password");
-        }
-  
-        // Validate required fields for registration
-        if (!obj.name || !obj.email || !obj.phone || !obj.username) {
-          return sendResponse(res, false, null, "All fields are required for registration");
-        }
-  
-        // Check for existing email, phone, username
-        const checkemailExists = await checkExists(
-          "user",
-          "user_id",
-          null,
-          "email",
-          obj.email,
-          "The Email"
-        );
-        if (checkemailExists.exists) {
-          return sendResponse(res, false, null, checkemailExists.message);
-        }
-  
-        const checkphoneExists = await checkExists(
-          "user",
-          "user_id",
-          null,
-          "phone",
-          obj.phone,
-          "The Phone Number"
-        );
-        if (checkphoneExists.exists) {
-          return sendResponse(res, false, null, checkphoneExists.message);
-        }
-  
-        const checkNameExists = await checkExists(
-          "user",
-          "user_id",
-          null,
-          "username",
-          obj.username,
-          "The Username"
-        );
-        if (checkNameExists.exists) {
-          return sendResponse(res, false, null, checkNameExists.message);
-        }
-  
-        // Add password and status to the object
-        obj.password = req.body.password;
-        obj.status = 1; // Ensure status is set to active
-  
-        // Insert new user and return the created user data
-        const [newUser] = await knex("user").insert(obj).returning("*");
-  
-        if (!newUser) {
-          return sendResponse(res, false, null, "Registration failed");
-        }
-  
-        // Generate tokens
-        const accessToken = generateAccessToken(newUser);
-        const refreshToken = generateRefreshToken(newUser);
-  
-        // Save refresh token in the database
-        await knex("user")
-          .where({ user_id: newUser.user_id })
-          .update({ refresh_token: refreshToken });
-  
-        // Set cookies
-        const options = {
-          httpOnly: false,
-          secure: true,
-          sameSite: "Strict",
+        const user_id = getIntOrNull(req.body?.user_id);
+        const obj = {
+            name: getObjOrNull(req.body.name),
+            email: getObjOrNull(req.body.email),
+            phone: getObjOrNull(req.body.phone),
+            username: getObjOrNull(req.body.username)
         };
-  
-        return res
-          .status(200)
-          .cookie("accessToken", accessToken, options)
-          .cookie("refreshToken", refreshToken, options)
-          .json({ success: true,status: true, accessToken, message: "Registered Successfully" });
-      }
+
+        // Handle image upload
+        if (req.files && req.files.image) {
+            const avatarLocalPath = req.files.image[0].path;
+            const image = await uploadOnCloudinary(avatarLocalPath, { secure: true });
+            obj.image = image?.secure_url;
+        }
+
+        if (user_id) {
+            // Update existing user (profile update)
+            const updateData = {};
+
+            // Only include fields that are provided in the request
+            if (obj.name) updateData.name = obj.name;
+            if (obj.email) updateData.email = obj.email;
+            if (obj.phone) updateData.phone = obj.phone;
+            if (obj.username) updateData.username = obj.username;
+            if (obj.image) updateData.image = obj.image;
+
+            // Update only if there are fields to update
+            if (Object.keys(updateData).length > 0) {
+                const result = await knex("user").where({ user_id }).update(updateData);
+                if (!result) {
+                    return sendResponse(res, false, null, "User not found");
+                }
+                return sendResponse(res, true, null, "User Updated");
+            } else {
+                return sendResponse(res, false, null, "No data provided for update");
+            }
+        } else {
+            // Create new user (registration)
+            if (!req.body.password) {
+                return sendResponse(res, false, null, "Please provide password");
+            }
+
+            // Validate required fields for registration
+            if (!obj.name || !obj.email || !obj.phone || !obj.username) {
+                return sendResponse(res, false, null, "All fields are required for registration");
+            }
+
+            // Check for existing email, phone, username
+            const checkemailExists = await checkExists(
+                "user",
+                "user_id",
+                null,
+                "email",
+                obj.email,
+                "The Email"
+            );
+            if (checkemailExists.exists) {
+                return sendResponse(res, false, null, checkemailExists.message);
+            }
+
+            const checkphoneExists = await checkExists(
+                "user",
+                "user_id",
+                null,
+                "phone",
+                obj.phone,
+                "The Phone Number"
+            );
+            if (checkphoneExists.exists) {
+                return sendResponse(res, false, null, checkphoneExists.message);
+            }
+
+            const checkNameExists = await checkExists(
+                "user",
+                "user_id",
+                null,
+                "username",
+                obj.username,
+                "The Username"
+            );
+            if (checkNameExists.exists) {
+                return sendResponse(res, false, null, checkNameExists.message);
+            }
+
+            // Add password and status to the object
+            obj.password = req.body.password;
+            obj.status = 1; // Ensure status is set to active
+
+            // Insert new user and return the created user data
+            const [newUser] = await knex("user").insert(obj).returning("*");
+
+            if (!newUser) {
+                return sendResponse(res, false, null, "Registration failed");
+            }
+
+            // Generate tokens
+            const accessToken = generateAccessToken(newUser);
+            const refreshToken = generateRefreshToken(newUser);
+
+            // Save refresh token in the database
+            await knex("user")
+                .where({ user_id: newUser.user_id })
+                .update({ refresh_token: refreshToken });
+
+            // Set cookies
+            const options = {
+                httpOnly: false,
+                secure: true,
+                sameSite: "Strict"
+            };
+
+            return res
+                .status(200)
+                .cookie("accessToken", accessToken, options)
+                .cookie("refreshToken", refreshToken, options)
+                .json({
+                    success: true,
+                    status: true,
+                    accessToken,
+                    message: "Registered Successfully"
+                });
+        }
     } catch (error) {
-      logger.consoleErrorLog(req.originalUrl, "Error in saveUser", error);
-      return sendResponse(res, false, null, "Error saving user details", statusType.DB_ERROR);
+        logger.consoleErrorLog(req.originalUrl, "Error in saveUser", error);
+        return sendResponse(res, false, null, "Error saving user details", statusType.DB_ERROR);
     }
-  }
+}
 
 export const get_current_user = asyncHandler(async (req, res) => {
     const user = req.userInfo;
     // console.log(user)
-    return sendResponse(res, true, {...user}, "User detials fetched successfully!");
+    return sendResponse(res, true, { ...user }, "User detials fetched successfully!");
 });
 
 export async function logout(req, res) {
