@@ -249,11 +249,13 @@ export const getAllTransaction = asyncHandler(async (req, res) => {
     // const { user_statement_id } = req.query;
     // const  user_statement_id = 30;
 
-    const data = await knex("user_transactions").where({
-        "user_transactions.status": 1,
-        // "user_transactions.user_statement_id": user_statement_id,
-        "user_transactions.user_id": user.user_id
-    });
+    const data = await knex("user_transactions")
+        .where({
+            "user_transactions.status": 1,
+            // "user_transactions.user_statement_id": user_statement_id,
+            "user_transactions.user_id": user.user_id
+        })
+        .orderBy("user_transactions.id", "desc");
 
     if (!data) {
         return sendResponse(res, false, null, "No Transaction history found");
