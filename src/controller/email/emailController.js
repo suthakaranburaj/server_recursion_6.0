@@ -16,6 +16,7 @@ export const sendOtp = (req, res) => {
     }
 
     const otp = generateOtp();
+    console.log(otp)
     const expiration = Date.now() + 300000;
 
     otpStore.set(email, { otp, expiration });
