@@ -27,7 +27,7 @@ export const sendOtp = (req, res) => {
             address: "tusharhhasule99@gmail.com"
         },
         to: email,
-        subject: "OTP Verification from GAIL-INDIA-LIMITED",
+        subject: "OTP Verification from Team CoreX",
         text: `Your OTP is: ${otp}`
     };
 
