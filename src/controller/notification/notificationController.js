@@ -9,15 +9,16 @@ import axios from "axios";
 
 export const updateNotification = asyncHandler(async (req, res) => {
     const user = req.userInfo;
-    const userId = req.userInfo.user_id;
 
-    const notification = await knex("notification").where({ user_id: userId });
+    // const notification = await knex("notification").where({ user_id: user.user_id });
 
-    if (!notification) {
-        return sendResponse(res, false, null, "Notification not found", 404);
-    }
+    // if (!notification) {
+    //     return sendResponse(res, false, null, "Notification not found", 404);
+    // }
 
-    const [updated] = await knex("notification").where({ id }).update({ is_read: false }, "*");
+    const [updated] = await knex("notification")
+        .where({ user_id: user.user_id })
+        .update({ is_read: true }, "*");
 
     return sendResponse(res, true, updated, "Notification updated successfully");
 });

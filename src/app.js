@@ -7,7 +7,7 @@ import { verifyToken } from "./middleware/verifyToken.js";
 import userRouter from "./controller/User/userRoutes.js";
 import emailRouter from "./controller/email/emailRoute.js";
 import statementRouter from "./controller/statements/statementsRoute.js";
-// import loginRoute from "./controllers/Login/loginRoute";
+import NotificationRouter from "./controller/notification/notificationRoute.js";
 
 const app = express();
 
@@ -36,6 +36,7 @@ app.use("/api/v1/email", emailRouter);
 
 app.use(verifyToken);
 app.use("/api/v1/statements", statementRouter);
+app.use("/api/v1/notification", NotificationRouter);
 // app.use("/api/v1/login", loginRoute);
 
 export default app;
