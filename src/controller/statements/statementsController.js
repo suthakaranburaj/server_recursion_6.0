@@ -273,3 +273,90 @@ export const getAllTransaction = asyncHandler(async (req, res) => {
 
     return sendResponse(res, true, data, "Transaction Fetched successfully !");
 });
+
+export const add_transaction = asyncHandler(async (req, res) => {
+    const user = req.userInfo;
+    const { user_statement_id, date, narration, balance, category, amount, chqRefNo, type } =
+        req.body;
+
+    // Validate required fields
+    if (!user_statement_id || !date || !amount || !type) {
+        return sendResponse(
+            res,
+            false,
+            null,
+            "Missing required fields: user_statement_id, date, amount, type"
+        );
+    }
+
+    // Validate transaction type
+    if (!["Credit", "Debit"].includes(type)) {
+        return sendResponse(
+            res,
+            false,
+            null,
+            "Invalid transaction type. Must be 'Credit' or 'Debit'"
+        );
+    }
+
+    // Validate amount
+    const amountValue = parseFloat(amount);
+    if (isNaN(amountValue) || amountValue <= 0) {
+        return sendResponse(res, false, null, "Amount must be a positive number");
+    }
+
+    // Validate balance if provided
+    let balanceValue = null;
+    if (balance !== undefined && balance !== null) {
+        balanceValue = parseFloat(balance);
+        if (isNaN(balanceValue)) {
+            return sendResponse(res, false, null, "Invalid balance value");
+        }
+    }
+
+    // Verify user statement exists and belongs to user
+    try {
+        const statementExists = await knex("user_statements")
+            .where({
+                id: user_statement_id,
+                user_id: user.user_id,
+                status: 1
+            })
+            .first();
+
+        if (!statementExists) {
+            return sendResponse(res, false, null, "Statement not found or access denied");
+        }
+    } catch (error) {
+        logger.error("Error verifying statement: ", error);
+        return sendResponse(res, false, null, "Error verifying statement");
+    }
+
+    // Prepare transaction data
+    const transactionData = {
+        user_statement_id,
+        user_id: user.user_id,
+        date,
+        narration: narration || null,
+        balance: balanceValue,
+        category: category || "Other",
+        amount: amountValue,
+        chqRefNo: chqRefNo || null,
+        type
+    };
+
+    try {
+        // Insert transaction
+        const [newTransaction] = await knex("user_transactions")
+            .insert(transactionData)
+            .returning("*");
+
+        // Create notification
+        await createNotification("Transaction added successfully!", "Transaction", user.user_id);
+
+        return sendResponse(res, true, newTransaction, "Transaction added successfully");
+    } catch (error) {
+        logger.error("Error adding transaction: ", error);
+        return sendResponse(res, false, null, "Failed to add transaction");
+    }
+});
