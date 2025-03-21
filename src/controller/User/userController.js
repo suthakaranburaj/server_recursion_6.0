@@ -157,7 +157,7 @@ export async function save_user(req, res) {
                 .status(200)
                 .cookie("accessToken", accessToken, options)
                 .cookie("refreshToken", refreshToken, options)
-                .json({ success: true, accessToken ,message:"Registered Successfully"});
+                .json({ status:true,success: true, accessToken ,message:"Registered Successfully"});
         }
     } catch (error) {
         logger.consoleErrorLog(req.originalUrl, "Error in saveUser", error);
