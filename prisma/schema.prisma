@@ -36,6 +36,7 @@ model user {
   alert                               alert[]
   notification                        notification[]
   goals                               goals[]
+  category_spend                      category_spend[]
 }
 
 model user_statements {
@@ -48,6 +49,18 @@ model user_statements {
   createdAt                           DateTime                        @default(now())
   updatedAt                           DateTime                        @default(now()) @updatedAt       
   user_transactions                   user_transactions[]             
+}
+
+model category_spend {
+  id                                  Int                             @id @default(autoincrement())
+  average                             String?
+  cat_name                            String?
+  user_id                             Int
+  user                                user                            @relation(fields: [user_id], references: [user_id])                  
+  status                              Boolean?                        @default(true)
+  createdAt                           DateTime                        @default(now())
+  updatedAt                           DateTime                        @default(now()) @updatedAt  
+  @@unique([user_id, cat_name])
 }
 
 model user_transactions {

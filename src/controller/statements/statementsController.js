@@ -36,7 +36,6 @@ export const uploadStatements = asyncHandler(async (req, res) => {
     let json_data;
     const [result] = await knex("user_statements").insert(data).returning("id");
 
-
     try {
         json_data = await axios.post("http://localhost:8000/upload_url", payload);
         // console.log("json_data", json_data);
@@ -97,6 +96,34 @@ export const uploadStatements = asyncHandler(async (req, res) => {
         json_data.data = normalizedData;
         // console.log(normalizedData)
         await knex("user_transactions").insert(normalizedData);
+        const categories = await knex("user_transactions")
+            .select("category as cat_name")
+            .avg("amount as average")
+            .where({
+                user_id: user.user_id,
+                type: "Debit" // Consider only withdrawals for spending
+            })
+            .groupBy("category");
+
+        // Upsert into category_spend
+        for (const cat of categories) {
+            if (!cat.cat_name) continue; 
+
+            await knex("category_spend")
+                .insert({
+                    user_id: user.user_id,
+                    cat_name: cat.cat_name,
+                    average: cat.average.toFixed(2),
+                    status: true,
+                    createdAt: knex.fn.now(),
+                    updatedAt: knex.fn.now()
+                })
+                .onConflict(["user_id", "cat_name"]) 
+                .merge({
+                    average: knex.raw("EXCLUDED.average"), // Use the new average
+                    updatedAt: knex.fn.now()
+                });
+        }
         await createNotification("Statements uploaded successfully!", "Statement", user.user_id);
     }
     if (!result) {
