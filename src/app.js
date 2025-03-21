@@ -6,7 +6,7 @@ import { verifyToken } from "./middleware/verifyToken.js";
 
 import userRouter from "./controller/User/userRoutes.js";
 import emailRouter from "./controller/email/emailRoute.js";
-// import chatRoute from "./controllers/Chat/chatRoute";
+import statementRouter from "./controller/statements/statementsRoute.js";
 // import loginRoute from "./controllers/Login/loginRoute";
 
 const app = express();
@@ -35,7 +35,7 @@ app.use("/api/v1/user", userRouter);
 app.use("/api/v1/email", emailRouter);
 
 app.use(verifyToken);
-// app.use("/api/v1/chat", chatRoute);
+app.use("/api/v1/statements", statementRouter);
 // app.use("/api/v1/login", loginRoute);
 
 export default app;
