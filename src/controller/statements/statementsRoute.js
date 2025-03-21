@@ -8,6 +8,7 @@ router.route("/save").post(upload.single("statements"), Statement.uploadStatemen
 
 router.route("/getAll").get(Statement.getStatements);
 router.route("/get_all_transactions").get(Statement.getAllTransaction);
+router.route("/stats").get(Statement.getDashBoardStats);
 
 //verifyJWT
 // router.route("/").get(Statement.get_current_user);
