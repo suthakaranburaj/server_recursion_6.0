@@ -4,8 +4,8 @@ import * as Subscription from "./subscriptionController.js";
 const router = Router();
 
 
-// router.route("/update").post(Subscription);
-// router.route("/get").get(Notification.getAllNotifications);
+router.route("/add").post(Subscription.add_subscription);
+router.route("/cancel").post(Subscription.cancel_subscription);
 
 //verifyJWT
 // router.route("/").get(Statement.get_current_user);
