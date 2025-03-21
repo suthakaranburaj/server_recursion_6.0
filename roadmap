@@ -1,0 +1,10 @@
+this is the roadmap which you have to follow after installing the repo
+
+1)npm i
+2)npm install prisma --save-dev
+3)npx prisma init ( if you have a prisma file already then dont run this command)
+4)npm install knex
+5)npm install pg
+6)npm install @prisma/client
+7)npx prisma generate (run after making any change in the schema)
+8)npx prisma migrate dev --name update_schema (not required initially)

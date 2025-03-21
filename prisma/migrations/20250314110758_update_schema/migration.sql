@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "salt" VARCHAR(255),
+ALTER COLUMN "phone_no" SET DATA TYPE VARCHAR(20);
