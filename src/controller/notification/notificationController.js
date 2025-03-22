@@ -16,8 +16,8 @@ export const updateNotification = asyncHandler(async (req, res) => {
     //     return sendResponse(res, false, null, "Notification not found", 404);
     // }
 
-    const [updated] = await knex("notification")
-        .where({ user_id: user.user_id })
+    const updated = await knex("notification")
+        .where({ user_id: user.user_id ,is_read:false})
         .update({ is_read: true }, "*");
 
     return sendResponse(res, true, updated, "Notification updated successfully");
