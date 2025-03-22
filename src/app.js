@@ -22,7 +22,8 @@ app.use(
         origin: [
             `http://localhost:${process.env.CLIENT_ORIGIN_PORT}`,
             "http://localhost:5174",
-            `http://localhost:5173`
+            `http://localhost:5173`,
+            "http://localhost:8000"
         ],
         credentials: true
     })

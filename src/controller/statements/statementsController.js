@@ -107,7 +107,7 @@ export const uploadStatements = asyncHandler(async (req, res) => {
 
         // Upsert into category_spend
         for (const cat of categories) {
-            if (!cat.cat_name) continue; 
+            if (!cat.cat_name) continue;
 
             await knex("category_spend")
                 .insert({
@@ -118,7 +118,7 @@ export const uploadStatements = asyncHandler(async (req, res) => {
                     createdAt: knex.fn.now(),
                     updatedAt: knex.fn.now()
                 })
-                .onConflict(["user_id", "cat_name"]) 
+                .onConflict(["user_id", "cat_name"])
                 .merge({
                     average: knex.raw("EXCLUDED.average"), // Use the new average
                     updatedAt: knex.fn.now()
@@ -385,5 +385,18 @@ export const add_transaction = asyncHandler(async (req, res) => {
     } catch (error) {
         logger.error("Error adding transaction: ", error);
         return sendResponse(res, false, null, "Failed to add transaction");
+    }
+});
+
+export const predict_api = asyncHandler(async (req, res) => {
+    const user = req.userInfo;
+    let json_data;
+    try {
+        json_data = await axios.get("http://localhost:8000/api/predict-spends/");
+        console.log("json_data", json_data);
+        console.log("Data successfully sent to conversion API:", json_data.status);
+        return sendResponse(res, true, json_data.data, "Prediction successfully");
+    } catch (error) {
+        console.error("Error sending data to conversion API:", error.message);
     }
 });
