@@ -2,6 +2,7 @@ import { sendResponse } from "../../utils/apiResponse.js";
 import knex from "../../db/constrants.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { createNotification } from "../../helper/CommonHelper.js";
+import axios from "axios";
 
 export const add_goals = asyncHandler(async (req, res) => {
     const user = req.userInfo;
@@ -58,3 +59,23 @@ export const get_all_goals = asyncHandler(async (req, res) => {
         return sendResponse(res, false, null, "Failed to fetch goals");
     }
 });
+
+export const recommend_api = asyncHandler(async (req, res) => {
+    const user = req.userInfo;
+    let salary = req.body;
+    salary = 10000;
+    const payload = {
+        salary:salary
+    }
+    let json_data;
+    try {
+        json_data = await axios.post("http://localhost:8000/api/recommend/", payload);
+        console.log("json_data", json_data);
+        console.log("Data successfully sent to conversion API:", json_data.status);
+        return sendResponse(res, true, json_data.data, "Prediction successfully");
+    } catch (error) {
+        console.error("Error sending data to conversion API:", error.message);
+    }
+});
+
+

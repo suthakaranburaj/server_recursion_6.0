@@ -9,6 +9,7 @@ router.route("/add").post(Goal.add_goals);
 
 //verifyJWT
 router.route("/get").get(Goal.get_all_goals);
+router.route("/recommend").post(Goal.recommend_api);
 // router.route("/logout").get(Statement.logout);
 
 export default router;
