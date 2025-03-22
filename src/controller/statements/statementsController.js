@@ -13,6 +13,21 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 import axios from "axios";
 export const uploadStatements = asyncHandler(async (req, res) => {
     const user = req.userInfo;
+    const password = req.body.password;
+    if (!user.subscription) {
+        // Count existing statements for the user
+        const countResult = await knex("user_statements")
+            .where({ user_id: user.user_id })
+            .count("id as count")
+            .first();
+
+        const statementCount = countResult ? parseInt(countResult.count) : 0;
+
+        // Block upload if they already have one statement
+        if (statementCount >= 1) {
+            return sendResponse(res, false, null, "Subscribe to upload more than one statement");
+        }
+    }
     const data = {
         user_id: user.user_id
     };
@@ -359,6 +374,49 @@ export const add_transaction = asyncHandler(async (req, res) => {
         return sendResponse(res, false, null, "Error verifying statement");
     }
 
+    // Check category spending limits
+    const categoryToCheck = category || "Other"; // Default category if not provided
+
+    try {
+        // Retrieve category spend information
+        const categorySpend = await knex("category_spend")
+            .where({
+                user_id: user.user_id,
+                cat_name: categoryToCheck,
+                status: true
+            })
+            .first();
+
+        if (categorySpend && categorySpend.average) {
+            const average = parseFloat(categorySpend.average);
+
+            // Proceed only if average is a valid number
+            if (!isNaN(average)) {
+                // Check if transaction amount exceeds the average
+                if (amountValue > average) {
+                    const excessAmount = amountValue - average;
+                    const excessPercentage = (excessAmount / average) * 100;
+
+                    let message;
+                    if (excessPercentage <= 20) {
+                        message =
+                            "You are crossing your previous limits. This transaction exceeds your average spend in this category.";
+                    } else {
+                        message =
+                            "You are significantly exceeding your average spending in this category. Please review your budget.";
+                    }
+
+                    return sendResponse(res, false, null, message);
+                }
+            } else {
+                logger.error(`Invalid average value for category: ${categoryToCheck}`);
+            }
+        }
+    } catch (error) {
+        logger.error("Error checking category spending limits: ", error);
+        // Proceed with transaction despite check error
+    }
+
     // Prepare transaction data
     const transactionData = {
         user_statement_id,
@@ -366,7 +424,7 @@ export const add_transaction = asyncHandler(async (req, res) => {
         date,
         narration: narration || null,
         balance: balanceValue,
-        category: category || "Other",
+        category: categoryToCheck, // Use normalized category name
         amount: amountValue,
         chqRefNo: chqRefNo || null,
         type
