@@ -115,3 +115,18 @@ model goals {
   createdAt                           DateTime                        @default(now())
   updatedAt                           DateTime                        @default(now()) @updatedAt
 }
+
+model UserTransaction {
+  id        Int      @id @default(autoincrement())
+  amount    Decimal  
+  category  String   @db.VarChar(100)
+  date      DateTime
+  narration String?  // Optional field
+  type      TransactionType
+  balance   Decimal  
+}
+
+enum TransactionType {
+  credit
+  debit
+}
