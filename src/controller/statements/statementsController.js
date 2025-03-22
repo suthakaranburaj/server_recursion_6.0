@@ -393,7 +393,7 @@ export const predict_api = asyncHandler(async (req, res) => {
     let json_data;
     try {
         json_data = await axios.get("http://localhost:8000/api/predict-spends/");
-        console.log("json_data", json_data);
+        // console.log("json_data", json_data);
         console.log("Data successfully sent to conversion API:", json_data.status);
         return sendResponse(res, true, json_data.data, "Prediction successfully");
     } catch (error) {
