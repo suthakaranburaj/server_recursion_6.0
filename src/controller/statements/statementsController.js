@@ -15,6 +15,8 @@ import FormData from "form-data";
 import fs from "fs";
 import path from "path";
 import os from "os";
+import { decrypt, encrypt, deriveKey } from "../../utils/cryptoUtils.js";
+
 export const uploadStatements = asyncHandler(async (req, res) => {
     const user = req.userInfo;
     const password = req.body.password;
@@ -97,7 +99,14 @@ export const uploadStatements = asyncHandler(async (req, res) => {
     if (!statementsUrl) {
         return sendResponse(res, false, null, "Failed to upload Statement");
     }
-    data.url = statementsUrl.url;
+    let url = statementsUrl.url;
+    const masterKey = process.env.MASTER_KEY;
+    const userSalt = user.salt;
+    const encryptionKey = deriveKey(masterKey, userSalt);
+    // Decrypt sensitive fields
+    // decrypt(user.name, encryptionKey)
+    
+    data.url = encrypt(url, encryptionKey);;
 
     const payload = {
         url: statementsUrl.url,
