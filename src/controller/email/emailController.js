@@ -24,7 +24,7 @@ export const sendOtp = (req, res) => {
     const mailOptions = {
         from: {
             name: "Team CoreX",
-            address: "tusharhhasule99@gmail.com"
+            address: "suthakaranburaj@gmail.com"
         },
         to: email,
         subject: "OTP Verification from Team CoreX",
