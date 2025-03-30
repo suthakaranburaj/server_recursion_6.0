@@ -11,6 +11,10 @@ import {
 import { uploadOnCloudinary, deleteOnCloudinary } from "../../utils/Cloudinary.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import axios from "axios";
+import FormData from "form-data";
+import fs from "fs";
+import path from "path";
+import os from "os";
 export const uploadStatements = asyncHandler(async (req, res) => {
     const user = req.userInfo;
     const password = req.body.password;
@@ -32,9 +36,61 @@ export const uploadStatements = asyncHandler(async (req, res) => {
         user_id: user.user_id
     };
 
-    const statementsPath = req.file?.path;
+    let statementsPath = req.file?.path;
     if (!statementsPath) {
         return sendResponse(res, false, null, "Statement not found");
+    }
+
+    let tempFilePath = null;
+
+    // PDF unlocking logic
+    // Modified PDF unlocking section
+    if (password) {
+        try {
+            // Read the file as buffer instead of stream
+            const fileBuffer = await fs.promises.readFile(statementsPath);
+
+            const form = new FormData();
+            form.append("file", fileBuffer, {
+                filename: "statement.pdf",
+                contentType: "application/pdf"
+            });
+            form.append("password", password);
+
+            const headers = {
+                ...form.getHeaders(),
+                "X-Api-Key": "bcc7c3b09e7fd7ab3c09d0a67f2a2b35",
+                Accept: "application/pdf" // Explicitly ask for PDF response
+            };
+
+            const response = await axios.post(
+                "https://api.pdfblocks.com/v1/remove_password",
+                form,
+                {
+                    headers,
+                    responseType: "arraybuffer",
+                    maxContentLength: Infinity, // For large files
+                    maxBodyLength: Infinity
+                }
+            );
+
+            if (response.status === 200) {
+                tempFilePath = path.join(os.tmpdir(), `unlocked-${Date.now()}.pdf`);
+                await fs.promises.writeFile(tempFilePath, response.data);
+                statementsPath = tempFilePath;
+            } else {
+                console.error("PDFBlocks API Response:", response.status, response.data);
+                return sendResponse(res, false, null, "Failed to unlock PDF");
+            }
+        } catch (error) {
+            console.error("Error unlocking PDF:", error.response?.data || error.message);
+            return sendResponse(
+                res,
+                false,
+                null,
+                error.response?.data?.message || "Invalid password or PDF processing error"
+            );
+        }
     }
 
     const statementsUrl = await uploadOnCloudinary(statementsPath);
