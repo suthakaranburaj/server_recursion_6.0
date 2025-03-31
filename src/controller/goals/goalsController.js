@@ -80,7 +80,6 @@ export const recommend_api = asyncHandler(async (req, res) => {
 });
 
 const scheduledJobs = new Map();
-
 async function scheduleGoalUpdates() {
     try {
         console.log("Scheduling investment updates for all active goals...");
@@ -150,10 +149,24 @@ async function scheduleGoalUpdates() {
                             status: newInvested < target
                         });
 
-                    console.log(`Goal ${currentGoal.id}: Invested updated to ${newInvested}`);
+                    console.log(`Goal ${currentGoal.id}: Invested updated to ₹${newInvested}`);
 
-                    // Cancel job if target is met or exceeded
-                    if (newInvested >= target) {
+                    // Send notification for investment update
+                    await createNotification(
+                        `Investment updated for Goal ${currentGoal.id}: ₹${newInvested} invested.`,
+                        "Goal",
+                        currentGoal.user_id
+                    );
+
+                    // Check if it's the last month (investment goal reached)
+                    if (newInvested >= invested) {
+                        await createNotification(
+                            `Final investment completed for Goal ${currentGoal.id}.`,
+                            "Goal",
+                            currentGoal.user_id
+                        );
+
+                        // Cancel job if target is met or exceeded
                         const job = scheduledJobs.get(currentGoal.id);
                         if (job) {
                             job.cancel();
@@ -178,6 +191,4 @@ async function scheduleGoalUpdates() {
         console.error("Error scheduling investment updates:", error);
     }
 }
-
-// Execute the scheduling function
 scheduleGoalUpdates();
