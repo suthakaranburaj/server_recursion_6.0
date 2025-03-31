@@ -235,7 +235,7 @@ export const getDashBoardStats = asyncHandler(async (req, res) => {
             "user_transactions.status": 1,
             "user_transactions.user_id": user.user_id
         })
-        .select("date", "amount", "type", "category", "narration");
+        .select("date", "amount", "type", "category", "narration","balance");
 
     // Initialize default response structure
     const defaultResponse = {
@@ -330,13 +330,15 @@ export const getDashBoardStats = asyncHandler(async (req, res) => {
         name,
         value
     }));
-
+    // console.log(expen)
     // Calculate net savings (latest month)
-    let netSavings = 0;
-    if (monthlyTrends.length > 0) {
-        const latestMonth = monthlyTrends[monthlyTrends.length - 1];
-        netSavings = latestMonth.income - latestMonth.expenses;
-    }
+    // console.log(transactions)
+    let netSavings = transactions[0].balance;
+    console.log(netSavings)
+    // if (monthlyTrends.length > 0) {
+    //     const latestMonth = monthlyTrends[monthlyTrends.length - 1];
+    //     netSavings = latestMonth.income - latestMonth.expenses;
+    // }
 
     // Get top 5 expenses
     topTransactions = transactions

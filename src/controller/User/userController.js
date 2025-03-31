@@ -155,7 +155,7 @@ export const get_current_user = asyncHandler(async (req, res) => {
     const masterKey = process.env.MASTER_KEY;
     const encryptionKey = deriveKey(masterKey, user.salt);
     if (user.is_web3_user) {
-        console.log(user)
+        // console.log(user)
         const web3User = {
             ...user,
             name: user.name ? decrypt(user.name, encryptionKey) : null,
