@@ -101,7 +101,7 @@ async function scheduleGoalUpdates() {
             const job = schedule.scheduleJob(cronExpression, async () => {
                 try {
                     const now = new Date();
-                    console.log(`Updating goal ${goal.id} at ${now.toLocaleTimeString()}`);
+                    console.log(`Updating goal ${goal.name} at ${now.toLocaleTimeString()}`);
 
                     // Fetch the latest goal data from the database
                     const currentGoal = await knex("goals").where("id", goal.id).first();
@@ -112,7 +112,7 @@ async function scheduleGoalUpdates() {
 
                     // Skip if goal is no longer active
                     if (!currentGoal.status) {
-                        console.log(`Goal ${currentGoal.id} is inactive, skipping update.`);
+                        console.log(`Goal ${currentGoal.name} is inactive, skipping update.`);
                         return;
                     }
 
@@ -129,7 +129,7 @@ async function scheduleGoalUpdates() {
                         isNaN(years) ||
                         isNaN(target)
                     ) {
-                        console.error(`Invalid numeric values in goal ${currentGoal.id}`);
+                        console.error(`Invalid numeric values in goal ${currentGoal.name}`);
                         return;
                     }
 
@@ -149,11 +149,11 @@ async function scheduleGoalUpdates() {
                             status: newInvested < target
                         });
 
-                    console.log(`Goal ${currentGoal.id}: Invested updated to ₹${newInvested}`);
+                    console.log(`Goal ${currentGoal.name}: Invested updated to ₹${newInvested}`);
 
                     // Send notification for investment update
                     await createNotification(
-                        `Investment updated for Goal ${currentGoal.id}: ₹${newInvested} invested.`,
+                        `Investment updated for Goal ${currentGoal.name}: ₹${newInvested} invested.`,
                         "Goal",
                         currentGoal.user_id
                     );
@@ -161,7 +161,7 @@ async function scheduleGoalUpdates() {
                     // Check if it's the last month (investment goal reached)
                     if (newInvested >= invested) {
                         await createNotification(
-                            `Final investment completed for Goal ${currentGoal.id}.`,
+                            `Final investment completed for Goal ${currentGoal.name}.`,
                             "Goal",
                             currentGoal.user_id
                         );
