@@ -112,6 +112,7 @@ model goals {
   years                               String?
   target                              String?
   invested                            String?
+  current_invested                    String?
   user_id                             Int
   user                                user                            @relation(fields: [user_id], references: [user_id])
   status                              Boolean?                        @default(true)
