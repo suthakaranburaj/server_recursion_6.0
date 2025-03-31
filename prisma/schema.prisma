@@ -18,7 +18,7 @@ model user {
   name                                String?
   email                               String?                         
   image                               String?                         
-  phone                               String?                         @unique @db.VarChar(20)
+  phone                               String?                         @db.VarChar(20)
   username                            String?                         
   salt                                String?                         @db.VarChar(255)
   password                            String?                         @db.VarChar(100)
@@ -26,6 +26,9 @@ model user {
   refresh_token                       String?                         @db.Text
   token_version                       Int                             @default(0)
   subscription                        Boolean?                        @default(false)
+  wallet_address                      String?                         @unique
+  nonce                               String?
+  is_web3_user                        Boolean                         @default(false)
   alert_limit                         Int?                            
   status                              Boolean?                        @default(true)
   createdAt                           DateTime                        @default(now())

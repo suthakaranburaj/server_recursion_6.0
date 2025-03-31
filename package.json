@@ -1,13 +1,17 @@
 {
   "type": "module",
   "dependencies": {
+    "@metamask/eth-sig-util": "^8.2.0",
+    "@openzeppelin/contracts": "^5.2.0",
     "@prisma/client": "^6.5.0",
+    "alchemy-sdk": "^3.5.6",
     "axios": "^1.8.4",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.6.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
+    "ethers": "^6.13.5",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "knex": "^3.1.0",

@@ -13,7 +13,6 @@ import { generateAccessToken, generateRefreshToken } from "../../middleware/Toke
 import { decrypt, encrypt, deriveKey } from "../../utils/cryptoUtils.js";
 import crypto from "crypto";
 
-
 //User Login
 export async function Login(req, res) {
     try {
@@ -37,7 +36,7 @@ export async function Login(req, res) {
             .status(200)
             .cookie("accessToken", accessToken, options)
             .cookie("refreshToken", refreshToken, options)
-            .json({ status:true,success: true, accessToken });
+            .json({ status: true, success: true, accessToken });
     } catch (error) {
         console.log(error);
         return sendResponse(res, false, null, "Login failed");
@@ -75,7 +74,7 @@ export async function save_user(req, res) {
             if (obj.username) updateData.username = encrypt(obj.username, encryptionKey);
             if (obj.image) updateData.image = encrypt(obj.image, encryptionKey);
             if (obj.email) updateData.email = obj.email; // Keep email plaintext
-            if (obj.phone) updateData.phone = obj.phone; // Keep phone plaintext
+            if (obj.phone != null) updateData.phone = obj.phone; // Keep phone plaintext
 
             const result = await knex("user").where({ user_id }).update(updateData);
             if (!result) return sendResponse(res, false, null, "Update failed");
@@ -87,7 +86,7 @@ export async function save_user(req, res) {
             // Generate unique salt for encryption
             const userSalt = crypto.randomBytes(16).toString("hex");
             obj.salt = userSalt;
-            console.log(userSalt)
+            console.log(userSalt);
             // Hash password with bcrypt
             obj.password = await bcrypt.hash(req.body.password, 10);
 
@@ -125,7 +124,7 @@ export async function save_user(req, res) {
             // console.log('obj',obj)
             const [newUser] = await knex("user").insert(obj).returning("*");
             if (!newUser) return sendResponse(res, false, null, "Registration failed");
-            
+
             // Generate tokens and set cookies
             const accessToken = generateAccessToken(newUser);
             const refreshToken = generateRefreshToken(newUser);
@@ -138,7 +137,12 @@ export async function save_user(req, res) {
                 .status(200)
                 .cookie("accessToken", accessToken, options)
                 .cookie("refreshToken", refreshToken, options)
-                .json({ status:true,success: true, accessToken, message: "Registered Successfully" });
+                .json({
+                    status: true,
+                    success: true,
+                    accessToken,
+                    message: "Registered Successfully"
+                });
         }
     } catch (error) {
         console.log(error);
@@ -150,6 +154,17 @@ export const get_current_user = asyncHandler(async (req, res) => {
     const user = req.userInfo;
     const masterKey = process.env.MASTER_KEY;
     const encryptionKey = deriveKey(masterKey, user.salt);
+    if (user.is_web3_user) {
+        console.log(user)
+        const web3User = {
+            ...user,
+            name: user.name ? decrypt(user.name, encryptionKey) : null,
+            username: user.username ? decrypt(user.username, encryptionKey) : null,
+            image: user.image ? decrypt(user.image, encryptionKey) : null
+            // Add other non-sensitive fields you want to expose
+        };
+        return sendResponse(res, true, web3User, "Web3 user details fetched");
+    }
 
     // Decrypt sensitive fields
     const decryptedUser = {

@@ -10,6 +10,7 @@ import statementRouter from "./controller/statements/statementsRoute.js";
 import NotificationRouter from "./controller/notification/notificationRoute.js";
 import SubscriptionRouter from './controller/subscription/subscriptionRoute.js'
 import GoalRouter from './controller/goals/goalsRoute.js'
+import web3Routes from './controller/web3/web3Route.js'
 
 const app = express();
 
@@ -37,11 +38,11 @@ app.use(cookieParser());
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/email", emailRouter);
 
+app.use("/api/v1/web3", web3Routes);
 app.use(verifyToken);
 app.use("/api/v1/statements", statementRouter);
 app.use("/api/v1/notification", NotificationRouter);
 app.use("/api/v1/subscription", SubscriptionRouter);
 app.use("/api/v1/goals", GoalRouter);
-// app.use("/api/v1/login", loginRoute);
 
 export default app;
